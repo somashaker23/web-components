@@ -58,7 +58,6 @@ class MyCalendar extends HTMLElement {
             }
         };
 
-        // Get the active theme colors
         const colors = themeColors[this.getAttribute('design')] || themeColors.academy;
 
         return `
@@ -79,7 +78,6 @@ class MyCalendar extends HTMLElement {
         th, td {
             border: 1px solid ${colors['--color-border']};
             padding: 0;
-            marigin:0;
             height: ${size / 7}px;
             width: ${size / 7}px;
             box-sizing: border-box;
@@ -142,8 +140,38 @@ function renderCalendar() {
             <my-calendar month="${month}" size="${size}" highlight-days="${highlightDays}" design="${design}"></my-calendar>
         `;
 }
-
 function copyToClipboard() {
+    const calendarContainer = document.getElementById('calendar-container');
+    const calendarElement = calendarContainer.querySelector('my-calendar');
+
+    if (!calendarElement || !calendarElement.shadowRoot) {
+        showTooltip("Please generate the calendar first!", "red");
+        return;
+    }
+
+    const table = calendarElement.shadowRoot.querySelector('table');
+    if (!table) {
+        showTooltip("No table found to copy!", "red");
+        return;
+    }
+
+    const renderedHTML = table.outerHTML;
+    const styleHTML = calendarElement.shadowRoot.querySelector('style').outerHTML;
+    const fullHTML = `${styleHTML}${renderedHTML}`;
+
+    navigator.clipboard.write([
+        new ClipboardItem({
+            'text/html': new Blob([fullHTML], { type: 'text/html' }),
+            'text/plain': new Blob([fullHTML], { type: 'text/plain' }) // Fallback for plain text
+        })
+    ]).then(() => {
+        showTooltip("Calendar copied! Paste it into Gmail.");
+    }).catch((err) => {
+        showTooltip("Failed to copy! " + err.message, "red");
+    });
+}
+
+function copyToClipboard1() {
     const calendarContainer = document.getElementById("calendar-container");
 
     if (calendarContainer.innerHTML.trim()) {
@@ -168,15 +196,18 @@ function copyToClipboard() {
 
 }
 
-function showTooltip(message) {
-    const tooltip = document.getElementById("tooltip");
-    tooltip.textContent = message;
-    tooltip.style.visibility = "visible";
+function showTooltip(message, color = "green") {
+    const tooltip = document.getElementById('tooltip-message');
+    tooltip.innerText = message;
+    tooltip.style.color = color;
+    tooltip.style.visibility ='visible';
 
     setTimeout(() => {
-        tooltip.style.visibility = "hidden";
-    }, 1500);
+        tooltip.innerText = "";
+        tooltip.style.visibility ='hidden';
+    }, 2000);
 }
+
 
 
 
